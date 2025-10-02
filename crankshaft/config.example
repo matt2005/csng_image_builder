@@ -1,0 +1,34 @@
+IMG_NAME='crankshaft-ng'
+ENABLE_SSH=0
+# Default username and password - uncomment to change
+#FIRST_USER_NAME=pi
+#FIRST_USER_PASS=raspberry
+
+# Uncomment this if a build fails and you'd like to try again
+#CONTINUE=1
+
+IMG_VERSION=v1-${IMG_NAME}
+IMG_FILENAME=${IMG_VERSION}
+ZIP_FILENAME=${IMG_VERSION}
+
+# Crankshaft specific configurations
+DEPLOY_COMPRESSION=xz
+COMPRESSION_LEVEL=6
+
+# Release and target configuration
+RELEASE=trixie
+TARGET_HOSTNAME=crankshaft
+KEYBOARD_KEYMAP=us
+KEYBOARD_LAYOUT="English (US)"
+TIMEZONE_DEFAULT=UTC
+
+# Enable specific features for automotive use
+ENABLE_I2C=1
+ENABLE_SPI=1
+ENABLE_UART=1
+
+# Stage selection - customize for crankshaft needs
+STAGE_LIST="stage0 stage1 stage2 stage3 stage4"
+
+# Skip stage5 as it's desktop environment we don't need
+SKIP_IMAGES="stage5"
