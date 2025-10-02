@@ -22,6 +22,34 @@ Crankshaft is built on top of the official Raspberry Pi OS generation tool (pi-g
 - Touch screen support
 - Wireless and USB connectivity
 
+## Building Options
+
+### 🚀 Automated Builds (GitHub Actions) - Recommended
+
+This repository includes GitHub Actions workflows for easy automated builds:
+
+#### Quick Start
+1. Go to the **Actions** tab in the GitHub repository
+2. Select **build-crankshaft-refactored** workflow  
+3. Click **Run workflow**
+4. Configure build parameters:
+   - **Version**: Build identifier (e.g., 'DEV', 'v1.0', 'csng-2024-10')
+   - **Architecture**: armhf (32-bit) or arm64 (64-bit) 
+   - **Release**: trixie (recommended) or bookworm
+
+#### Automatic Triggers
+- **Push to main**: Builds automatically when crankshaft code changes
+- **Pull Requests**: Validation builds for code review
+
+#### Build Outputs
+- Compressed image files (.xz format)
+- Checksum files (MD5, SHA1, SHA256)
+- Build logs for troubleshooting
+
+### 🐳 Local Docker Build
+
+For local development and testing:
+
 ## Dependencies
 
 pi-gen runs on Debian-based operating systems released after 2017, and we
