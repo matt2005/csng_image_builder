@@ -153,7 +153,43 @@ jobs:
           sudo apt-get install -y \
             coreutils quilt parted qemu-user-static debootstrap zerofree zip \
             dosfstools e2fsprogs libarchive-tools libcap2-bin grep rsync xz-utils \
-            file git curl bc gpg pigz xxd arch-test bmap-tools kmod
+            file git curl bc gpg pigz xxd arch-test bmap-tools kmod \
+            binfmt-support
+            
+      - name: Set up binfmt support for cross-compilation
+        run: |
+          echo "=== Setting up binfmt support ==="
+          
+          # Load binfmt_misc module
+          sudo modprobe binfmt_misc
+          
+          # Mount binfmt_misc if not already mounted
+          if ! mount | grep -q binfmt_misc; then
+            sudo mount -t binfmt_misc none /proc/sys/fs/binfmt_misc
+          fi
+          
+          # Enable persistent binfmt support for ARM architectures
+          # Based on crankshaft binfmt-misc.md documentation
+          if [ -f /var/lib/binfmts/qemu-arm ]; then
+            sudo sed -i '10s/^$/yes/g' /var/lib/binfmts/qemu-arm || echo "qemu-arm binfmt config not modified"
+          fi
+          
+          if [ -f /var/lib/binfmts/qemu-aarch64 ]; then
+            sudo sed -i '10s/^$/yes/g' /var/lib/binfmts/qemu-aarch64 || echo "qemu-aarch64 binfmt config not modified"
+          fi
+          
+          # Restart binfmt service to apply changes
+          sudo systemctl restart binfmt-support || echo "binfmt-support service restart failed"
+          
+          # Verify setup
+          echo "binfmt_misc setup verification:"
+          ls -la /proc/sys/fs/binfmt_misc/ | head -10
+          lsmod | grep binfmt_misc
+          
+          # Test ARM emulation capability
+          echo "Testing ARM emulation readiness:"
+          qemu-arm-static --version || echo "qemu-arm-static not available"
+          echo "====================================="
             
       - name: Check Docker environment
         run: |
@@ -162,6 +198,18 @@ jobs:
           docker info
           echo "Docker service status:"
           sudo systemctl status docker --no-pager || echo "systemctl not available"
+          
+          echo "=== QEMU and binfmt_misc verification ==="
+          # Check QEMU processors
+          ls -la /proc/sys/fs/binfmt_misc/ || echo "binfmt_misc not available"
+          
+          # Test if ARM emulation is working
+          echo "Testing ARM emulation:"
+          docker run --rm --platform linux/arm/v7 hello-world || echo "ARM v7 test failed"
+          
+          # Check available platforms
+          echo "Available Docker platforms:"
+          docker buildx ls || echo "buildx not available"
           echo "================================="
             
       - name: Build crankshaft image using Docker
