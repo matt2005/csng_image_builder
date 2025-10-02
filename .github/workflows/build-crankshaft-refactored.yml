@@ -119,16 +119,16 @@ jobs:
         run: |
           # Create configuration file
           cat > config <<EOF
-          IMG_NAME=\${VERSION_STRING}
+          IMG_NAME=${VERSION_STRING}
           ENABLE_SSH=0
           
           # Build metadata  
-          IMG_VERSION=\${VERSION_STRING}
-          IMG_FILENAME=\${VERSION_STRING}
-          ZIP_FILENAME=\${VERSION_STRING}
-          BUILDHASH='\${BUILDHASH}'
-          BUILDBRANCH='\${BUILDBRANCH}'
-          BUILDDATE='\${BUILDDATE}'
+          IMG_VERSION=${VERSION_STRING}
+          IMG_FILENAME=${VERSION_STRING}
+          ZIP_FILENAME=${VERSION_STRING}
+          BUILDHASH='${BUILDHASH}'
+          BUILDBRANCH='${BUILDBRANCH}'
+          BUILDDATE='${BUILDDATE}'
           EOF
           
           # Make all shell scripts executable
