@@ -119,34 +119,16 @@ jobs:
         run: |
           # Create configuration file
           cat > config <<EOF
-          IMG_NAME=crankshaft-${RELEASE}-${ARCH}
+          IMG_NAME=\${VERSION_STRING}
           ENABLE_SSH=0
-          ARCH=${ARCH}
-          RELEASE=${RELEASE}
           
-          # Build metadata
-          IMG_VERSION=${VERSION_STRING}
-          IMG_FILENAME=${VERSION_STRING}
-          ARCHIVE_FILENAME=${VERSION_STRING}
-          BUILDHASH='${BUILDHASH}'
-          BUILDBRANCH='${BUILDBRANCH}'
-          BUILDDATE='${BUILDDATE}'
-          
-          # Compression settings
-          DEPLOY_COMPRESSION=xz
-          COMPRESSION_LEVEL=6
-          
-          # Hardware features for automotive use
-          ENABLE_I2C=1
-          ENABLE_SPI=1
-          ENABLE_UART=1
-          
-          # Stage configuration
-          STAGE_LIST="stage0 stage1 stage2 stage3 stage4"
-          
-          # User configuration (commented for security)
-          #FIRST_USER_NAME=pi
-          #FIRST_USER_PASS=raspberry
+          # Build metadata  
+          IMG_VERSION=\${VERSION_STRING}
+          IMG_FILENAME=\${VERSION_STRING}
+          ZIP_FILENAME=\${VERSION_STRING}
+          BUILDHASH='\${BUILDHASH}'
+          BUILDBRANCH='\${BUILDBRANCH}'
+          BUILDDATE='\${BUILDDATE}'
           EOF
           
           # Make all shell scripts executable
@@ -173,12 +155,57 @@ jobs:
             dosfstools e2fsprogs libarchive-tools libcap2-bin grep rsync xz-utils \
             file git curl bc gpg pigz xxd arch-test bmap-tools kmod
             
+      - name: Check Docker environment
+        run: |
+          echo "=== Docker Environment Check ==="
+          docker --version
+          docker info
+          echo "Docker service status:"
+          sudo systemctl status docker --no-pager || echo "systemctl not available"
+          echo "================================="
+            
       - name: Build crankshaft image using Docker
         id: build-docker
         working-directory: crankshaft
         run: |
           echo "Starting Docker build..."
+          echo "Current directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+          
+          # Ensure build-docker.sh is executable
+          chmod +x build-docker.sh
+          
+          # Check if config file exists
+          if [ ! -f config ]; then
+            echo "Error: config file not found!"
+            exit 1
+          fi
+          
+          echo "Config file contents:"
+          cat config
+          
+          # Check Docker environment
+          docker --version
+          docker info | head -20
+          
+          # Run the docker build
+          echo "Executing: ./build-docker.sh"
           ./build-docker.sh
+          
+          # Check what was produced
+          echo "Build completed. Checking results..."
+          if [ -d deploy ]; then
+            echo "Deploy directory contents:"
+            ls -la deploy/
+          else
+            echo "No deploy directory found!"
+          fi
+          
+          if [ -d work ]; then
+            echo "Work directory contents:"
+            find work -name "*.log" -exec echo "Log file: {}" \; -exec tail -20 {} \;
+          fi
         env:
           GIT_HASH: ${{ steps.get_version.outputs.buildhash }}
           GIT_BRANCH: ${{ steps.get_version.outputs.buildbranch }}
@@ -200,27 +227,43 @@ jobs:
         id: get-artifact-name
         working-directory: crankshaft
         run: |
+          echo "=== Deploy Directory Contents ==="
+          ls -hla deploy/ || echo "No deploy directory found"
+          
           if [ ! -d deploy ]; then
             echo "Error: Deploy directory not found!"
             exit 1
           fi
           
-          # Find the main image archive
-          ARTIFACT_PATHNAME=$(find deploy -name "*.xz" -o -name "*.zip" | head -n 1)
+          # List all files in deploy directory
+          find deploy -type f -exec ls -lh {} \;
+          
+          # The original build produces .zip files, so look for those first
+          # But also check for .xz files from modern compression
+          ARTIFACT_PATHNAME=""
+          if ls deploy/*.zip >/dev/null 2>&1; then
+            ARTIFACT_PATHNAME=$(ls deploy/*.zip | head -n 1)
+          elif ls deploy/*.xz >/dev/null 2>&1; then  
+            ARTIFACT_PATHNAME=$(ls deploy/*.xz | head -n 1)
+          elif ls deploy/*.img >/dev/null 2>&1; then
+            ARTIFACT_PATHNAME=$(ls deploy/*.img | head -n 1)
+          fi
+          
           if [ -z "$ARTIFACT_PATHNAME" ]; then
-            echo "Error: No compressed image found!"
+            echo "Error: No image artifact found in deploy directory!"
+            echo "Available files:"
             ls -la deploy/
             exit 1
           fi
           
           ARTIFACT_NAME=$(basename "$ARTIFACT_PATHNAME")
           
-          # Find checksum files
+          # Find checksum files - they might have different extensions
           MD5_PATHNAME=$(find deploy -name "*.md5" | head -n 1)
-          SHA1_PATHNAME=$(find deploy -name "*.sha1" | head -n 1)
+          SHA1_PATHNAME=$(find deploy -name "*.sha1" | head -n 1) 
           SHA256_PATHNAME=$(find deploy -name "*.sha256" | head -n 1)
           
-          # Set outputs
+          # Set outputs using modern format
           echo "artifact_filename=${ARTIFACT_NAME}" >> $GITHUB_OUTPUT
           echo "artifact_path=${ARTIFACT_PATHNAME}" >> $GITHUB_OUTPUT
           
