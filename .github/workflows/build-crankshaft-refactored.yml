@@ -244,8 +244,8 @@ jobs:
           echo "Directory contents:"
           ls -la
           
-          # Ensure build-docker.sh is executable
-          chmod +x build-docker.sh
+          # Ensure both build scripts are executable
+          chmod +x build-docker.sh build-docker-debug.sh
           
           # Check if config file exists
           if [ ! -f config ]; then
@@ -260,9 +260,9 @@ jobs:
           docker --version
           docker info | head -20
           
-          # Run the docker build
-          echo "Executing: ./build-docker.sh"
-          ./build-docker.sh
+          # Run the DEBUG docker build for detailed logging
+          echo "Executing: ./build-docker-debug.sh for enhanced debugging"
+          ./build-docker-debug.sh
           
           # Check what was produced
           echo "Build completed. Checking results..."
