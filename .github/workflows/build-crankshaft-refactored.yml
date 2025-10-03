@@ -94,8 +94,17 @@ jobs:
           sudo systemctl restart binfmt-support
           
           echo "=== Verifying binfmt configuration ==="
-          echo "ARM emulation test:"
-          docker run --rm arm64v8/busybox echo "ARM64 emulation working" || echo "ARM64 test failed"
+          echo "Testing ARM emulation capability:"
+          
+          # Test with platform specification - this should work if binfmt is properly configured
+          docker run --rm --platform linux/arm64 busybox:latest echo "ARM64 emulation working!" || echo "ARM64 platform test failed"
+          
+          # Alternative test - try to run qemu directly
+          echo "Testing qemu-aarch64-static directly:"
+          /usr/bin/qemu-aarch64-static --version || echo "qemu-aarch64-static not found"
+          
+          echo "binfmt_misc status:"
+          ls -la /proc/sys/fs/binfmt_misc/ | head -5 || echo "binfmt_misc not accessible"
           
       - name: Free up disk space
         run: |
