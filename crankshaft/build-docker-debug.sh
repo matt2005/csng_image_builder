@@ -141,6 +141,7 @@ if [ "${CONTAINER_EXISTS}" != "" ]; then
 	echo "Running container with enhanced binfmt testing..."
 	time ${DOCKER} run --rm --privileged \
 		--volume "${CONFIG_FILE}":/config:ro \
+		--mount type=bind,source=/proc/sys/fs/binfmt_misc,target=/host-binfmt \
 		-e "GIT_HASH=${GIT_HASH}" \
 		-e "GIT_BRANCH=${GIT_BRANCH}" \
 		--volumes-from="${CONTAINER_NAME}" --name "${CONTAINER_NAME}_cont" \
@@ -154,14 +155,18 @@ if [ "${CONTAINER_EXISTS}" != "" ]; then
 		echo 'binfmt_misc module status:'
 		lsmod | grep binfmt_misc || echo 'binfmt_misc module not loaded in container'
 		
-		echo 'binfmt_misc filesystem in container:'
-		mount | grep binfmt_misc || echo 'binfmt_misc not mounted in container'
+		echo 'Host binfmt_misc (mounted at /host-binfmt):'
+		ls -la /host-binfmt/ 2>/dev/null | head -10 || echo 'host-binfmt not accessible'
 		
-		echo 'binfmt_misc directory in container:'
-		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo 'binfmt_misc not accessible in container'
+		echo 'Attempting to bind mount host binfmt to container location:'
+		mkdir -p /proc/sys/fs/binfmt_misc
+		mount --bind /host-binfmt /proc/sys/fs/binfmt_misc || echo 'Bind mount failed'
+		
+		echo 'binfmt_misc directory in container after bind mount:'
+		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo 'binfmt_misc still not accessible in container'
 		
 		echo 'QEMU binaries in container:'
-		ls -la /usr/bin/qemu-*-static 2>/dev/null || echo 'No QEMU static binaries in container'
+		ls -la /usr/bin/qemu-*-static 2>/dev/null | head -5 || echo 'No QEMU static binaries in container'
 		
 		echo 'Testing qemu-aarch64-static in container:'
 		/usr/bin/qemu-aarch64-static --version 2>/dev/null || echo 'qemu-aarch64-static failed in container'
@@ -187,6 +192,7 @@ else
 	echo "Running new container with enhanced binfmt testing..."
 	time ${DOCKER} run --name "${CONTAINER_NAME}" --privileged \
 		--volume "${CONFIG_FILE}":/config:ro \
+		--mount type=bind,source=/proc/sys/fs/binfmt_misc,target=/host-binfmt \
 		-e "GIT_HASH=${GIT_HASH}" \
 		-e "GIT_BRANCH=${GIT_BRANCH}" \
 		pi-gen \
@@ -199,14 +205,18 @@ else
 		echo 'binfmt_misc module status:'
 		lsmod | grep binfmt_misc || echo 'binfmt_misc module not loaded in container'
 		
-		echo 'binfmt_misc filesystem in container:'
-		mount | grep binfmt_misc || echo 'binfmt_misc not mounted in container'
+		echo 'Host binfmt_misc (mounted at /host-binfmt):'
+		ls -la /host-binfmt/ 2>/dev/null | head -10 || echo 'host-binfmt not accessible'
 		
-		echo 'binfmt_misc directory in container:'
-		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo 'binfmt_misc not accessible in container'
+		echo 'Attempting to bind mount host binfmt to container location:'
+		mkdir -p /proc/sys/fs/binfmt_misc
+		mount --bind /host-binfmt /proc/sys/fs/binfmt_misc || echo 'Bind mount failed'
+		
+		echo 'binfmt_misc directory in container after bind mount:'
+		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo 'binfmt_misc still not accessible in container'
 		
 		echo 'QEMU binaries in container:'
-		ls -la /usr/bin/qemu-*-static 2>/dev/null || echo 'No QEMU static binaries in container'
+		ls -la /usr/bin/qemu-*-static 2>/dev/null | head -5 || echo 'No QEMU static binaries in container'
 		
 		echo 'Testing qemu-aarch64-static in container:'
 		/usr/bin/qemu-aarch64-static --version 2>/dev/null || echo 'qemu-aarch64-static failed in container'
