@@ -359,13 +359,29 @@ jobs:
           echo "  SHA1: $(basename "$SHA1_PATHNAME" 2>/dev/null || echo 'none')"
           echo "  SHA256: $(basename "$SHA256_PATHNAME" 2>/dev/null || echo 'none')"
           
+      - name: Debug - List available log files
+        run: |
+          echo "=== Checking for log files ==="
+          echo "Work directory structure:"
+          find crankshaft/work -type f -name "*.log" 2>/dev/null || echo "No log files found in work directory"
+          
+          echo "Build log location:"
+          ls -la crankshaft/work/crankshaft-ng/build.log 2>/dev/null || echo "Main build log not found"
+          
+          echo "Stage logs:"
+          find crankshaft/work -path "*/stage*" -name "*.log" 2>/dev/null || echo "No stage logs found"
+          
+          echo "All files in work directory:"
+          find crankshaft/work -type f 2>/dev/null | head -20 || echo "Work directory not accessible"
+          
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: crankshaft-refactored-${{ steps.get_version.outputs.builddate }}-${{ steps.get_version.outputs.version }}
           path: |
             crankshaft/deploy/
-            crankshaft/work/*/build.log
+            crankshaft/work/crankshaft-ng/build.log
+            crankshaft/work/stage*/debootstrap.log
           retention-days: 30
           
       - name: Upload build logs on failure
@@ -374,8 +390,10 @@ jobs:
         with:
           name: build-logs-failure-${{ steps.get_version.outputs.builddate }}-${{ steps.get_version.outputs.version }}
           path: |
-            crankshaft/work/*/build.log
-            crankshaft/work/*/*.log
+            crankshaft/work/crankshaft-ng/build.log
+            crankshaft/work/stage*/debootstrap.log
+            crankshaft/work/stage*/*.log
+            crankshaft/*.log
           retention-days: 7
 
   # Release job (only runs for specific version patterns)
