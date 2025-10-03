@@ -1,6 +1,6 @@
-FROM --platform=linux/i386 debian:bookworm
+FROM --platform=${BUILDPLATFORM} debian:bookworm
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -y update && \
     apt-get -y install \
