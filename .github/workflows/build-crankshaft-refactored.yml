@@ -362,18 +362,31 @@ jobs:
       - name: Debug - List available log files
         if: always()
         run: |
-          echo "=== Checking for log files ==="
-          echo "Work directory structure:"
+          echo "=== Checking for log files and directory structure ==="
+          
+          echo "Current directory contents:"
+          ls -la . || echo "Cannot list current directory"
+          
+          echo "Crankshaft directory contents:"
+          ls -la crankshaft/ || echo "Crankshaft directory not found"
+          
+          echo "Looking for work directory:"
+          find . -name "work" -type d 2>/dev/null || echo "No work directories found"
+          
+          echo "All log files in project:"
+          find . -name "*.log" -type f 2>/dev/null || echo "No log files found anywhere"
+          
+          echo "Work directory structure (if exists):"
           find crankshaft/work -type f -name "*.log" 2>/dev/null || echo "No log files found in work directory"
           
-          echo "Build log location:"
+          echo "Specific build log location:"
           ls -la crankshaft/work/crankshaft-ng/build.log 2>/dev/null || echo "Main build log not found"
           
           echo "Stage logs:"
           find crankshaft/work -path "*/stage*" -name "*.log" 2>/dev/null || echo "No stage logs found"
           
-          echo "All files in work directory:"
-          find crankshaft/work -type f 2>/dev/null | head -20 || echo "Work directory not accessible"
+          echo "Docker container logs (if any):"
+          docker ps -a || echo "No docker containers found"
           
       - name: Upload build artifacts
         if: success()
