@@ -360,6 +360,7 @@ jobs:
           echo "  SHA256: $(basename "$SHA256_PATHNAME" 2>/dev/null || echo 'none')"
           
       - name: Debug - List available log files
+        if: always()
         run: |
           echo "=== Checking for log files ==="
           echo "Work directory structure:"
@@ -375,6 +376,7 @@ jobs:
           find crankshaft/work -type f 2>/dev/null | head -20 || echo "Work directory not accessible"
           
       - name: Upload build artifacts
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: crankshaft-refactored-${{ steps.get_version.outputs.builddate }}-${{ steps.get_version.outputs.version }}
@@ -385,7 +387,7 @@ jobs:
           retention-days: 30
           
       - name: Upload build logs on failure
-        if: failure()
+        if: always() && (failure() || cancelled())
         uses: actions/upload-artifact@v4
         with:
           name: build-logs-failure-${{ steps.get_version.outputs.builddate }}-${{ steps.get_version.outputs.version }}
