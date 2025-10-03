@@ -79,6 +79,7 @@ if [ "${CONTAINER_EXISTS}" != "" ]; then
 	trap 'echo "got CTRL+C... please wait 5s" && ${DOCKER} stop -t 5 ${CONTAINER_NAME}_cont' SIGINT SIGTERM
 	time ${DOCKER} run --rm --privileged \
 		--volume "${CONFIG_FILE}":/config:ro \
+		--volume /proc/sys/fs/binfmt_misc:/proc/sys/fs/binfmt_misc \
 		-e "GIT_HASH=${GIT_HASH}" \
 		-e "GIT_BRANCH=${GIT_BRANCH}" \
 		--volumes-from="${CONTAINER_NAME}" --name "${CONTAINER_NAME}_cont" \
@@ -91,6 +92,7 @@ else
 	trap 'echo "got CTRL+C... please wait 5s" && ${DOCKER} stop -t 5 ${CONTAINER_NAME}' SIGINT SIGTERM
 	time ${DOCKER} run --name "${CONTAINER_NAME}" --privileged \
 		--volume "${CONFIG_FILE}":/config:ro \
+		--volume /proc/sys/fs/binfmt_misc:/proc/sys/fs/binfmt_misc \
 		-e "GIT_HASH=${GIT_HASH}" \
 		-e "GIT_BRANCH=${GIT_BRANCH}" \
 		pi-gen \
