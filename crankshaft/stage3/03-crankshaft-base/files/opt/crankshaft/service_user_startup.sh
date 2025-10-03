@@ -13,7 +13,7 @@ fi
 
 if [ -f ${PYTHON_SCRIPT} ] ; then
     log_echo "User python script starting..."
-    /usr/bin/python ${PYTHON_SCRIPT} &
+    /usr/bin/python3 ${PYTHON_SCRIPT} &
 fi
 
 exit 0

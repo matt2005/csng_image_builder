@@ -27,7 +27,7 @@ usermod -G bluetooth -a pulse
 usermod -G bluetooth -a root
 
 # Enable compat and disable sap
-sed -i 's/ExecStart=.*/ExecStart=\/usr\/lib\/bluetooth\/bluetoothd --compat --noplugin=sap/' /lib/systemd/system/bluetooth.service
+sed -i 's/ExecStart=.*/ExecStart=\/usr\/lib\/bluetooth\/bluetoothd --compat --noplugin=sap/' /usr/lib/systemd/system/bluetooth.service
 
 # Set default bt privacy
 sed -i 's/# Privacy = off/Privacy = off/' /etc/bluetooth/main.conf

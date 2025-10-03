@@ -70,7 +70,7 @@ ln -s /boot/crankshaft/shutdown.png /usr/share/plymouth/themes/custom/shutdown.p
 ln -s /boot/crankshaft/usbcamera-overlay.png /opt/crankshaft/cam_overlay/overlay.png
 
 # triggerhappy
-sed -i 's/user nobody/user pi/' /lib/systemd/system/triggerhappy.service
+sed -i 's/user nobody/user pi/' /usr/lib/systemd/system/triggerhappy.service
 ln -s /boot/crankshaft/triggerhappy.conf /etc/triggerhappy/triggers.d/crankshaft.conf
 
 # set the hostname
@@ -78,7 +78,7 @@ echo "CRANKSHAFT-NG" > /etc/hostname
 sed -i "s/raspberrypi/CRANKSHAFT-NG/" /etc/hosts
 
 # Boost system performance
-sed -i 's/reboot.target/shutdown.target/g' /lib/systemd/system/rpi-display-backlight.service
+sed -i 's/reboot.target/shutdown.target/g' /usr/lib/systemd/system/rpi-display-backlight.service
 
 # set gpsd settings
 sed -i 's/GPSD_OPTIONS=\"\"/GPSD_OPTIONS=\"-n\"/g' /etc/default/gpsd
@@ -149,16 +149,16 @@ systemctl disable dphys-swapfile.service
 systemctl disable systemd-timesyncd.service
 systemctl disable systemd-fsck@dev-mmcblk0p1.service
 
-rm /lib/systemd/system/systemd-rfkill.service
-rm /lib/systemd/system/systemd-rfkill.socket
-rm /lib/systemd/system/apt-daily.timer
-rm /lib/systemd/system/apt-daily.service
-rm /lib/systemd/system/apt-daily-upgrade.timer
-rm /lib/systemd/system/apt-daily-upgrade.service
+rm /usr/lib/systemd/system/systemd-rfkill.service
+rm /usr/lib/systemd/system/systemd-rfkill.socket
+rm /usr/lib/systemd/system/apt-daily.timer
+rm /usr/lib/systemd/system/apt-daily.service
+rm /usr/lib/systemd/system/apt-daily-upgrade.timer
+rm /usr/lib/systemd/system/apt-daily-upgrade.service
 rm /etc/systemd/system/timers.target.wants/apt-daily.timer
 rm /etc/systemd/system/timers.target.wants/apt-daily-upgrade.timer
-rm /lib/systemd/system/timers.target.wants/systemd-tmpfiles-clean.timer
-rm /lib/systemd/system/apply_noobs_os_config.service
+rm /usr/lib/systemd/system/timers.target.wants/systemd-tmpfiles-clean.timer
+rm /usr/lib/systemd/system/apply_noobs_os_config.service
 
 
 #systemctl daemon-relaod
@@ -173,7 +173,7 @@ ldconfig
 # add gettys
 systemctl enable getty@tty3.service
 # Don't kill still running getty - fixes restart in x11 mode during boot
-sed -i 's/^TTYVHangup=.*/TTYVHangup=no/' /lib/systemd/system/getty@.service
+sed -i 's/^TTYVHangup=.*/TTYVHangup=no/' /usr/lib/systemd/system/getty@.service
 
 # enable splash and set default console
 sed -i 's/console=tty1/console=tty3/' /boot/cmdline.txt
@@ -265,7 +265,7 @@ echo "default-server = unix:/var/run/pulse/native" >> /etc/pulse/client.conf
 echo "autospawn = no" >> /etc/pulse/client.conf
 
 # Make udev mountpoints shared
-sed -i 's/^MountFlags=.*/MountFlags=shared/' /lib/systemd/system/systemd-udevd.service
+sed -i 's/^MountFlags=.*/MountFlags=shared/' /usr/lib/systemd/system/systemd-udevd.service
 
 # link csmt
 ln -s /usr/local/bin/crankshaft /usr/local/bin/csmt
