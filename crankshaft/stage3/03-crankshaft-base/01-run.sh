@@ -62,6 +62,7 @@ install -m 755 files/etc/rc.local                                       "${ROOTF
 install -m 644 files/etc/issue                                          "${ROOTFS_DIR}/etc/"
 install -m 644 files/etc/issue.net                                      "${ROOTFS_DIR}/etc/"
 install -m 644 files/etc/motd                                           "${ROOTFS_DIR}/etc/"
+install -d "${ROOTFS_DIR}/etc/rsyslog.d"
 install -m 644 files/etc/rsyslog.d/disable-logspam.conf                 "${ROOTFS_DIR}/etc/rsyslog.d/"
 
 install -d "${ROOTFS_DIR}/etc/initramfs-tools/conf.d"
