@@ -62,6 +62,13 @@ jobs:
         with:
           fetch-depth: 0  # Full history for proper git information
           
+      - name: Checkout prebuilts repository
+        uses: actions/checkout@v4
+        with:
+          repository: opencardev/prebuilts
+          path: prebuilts
+          fetch-depth: 1  # Shallow clone for prebuilts
+          
       - name: Set up QEMU for multi-architecture builds
         uses: docker/setup-qemu-action@v3
         with:
@@ -234,6 +241,19 @@ jobs:
           echo "Available Docker platforms:"
           docker buildx ls || echo "buildx not available"
           echo "================================="
+          
+      - name: Prepare prebuilts for Docker build
+        run: |
+          echo "Copying prebuilts into crankshaft directory for Docker access..."
+          
+          # Copy prebuilts directory into crankshaft so it's available as /pi-gen/prebuilts in container
+          cp -r prebuilts crankshaft/
+          
+          echo "Prebuilts directory contents:"
+          ls -la crankshaft/prebuilts/
+          
+          echo "Looking for required udev rules:"
+          find crankshaft/prebuilts -name "51-android.rules" || echo "51-android.rules not found"
             
       - name: Build crankshaft image using Docker
         id: build-docker
