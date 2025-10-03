@@ -71,6 +71,32 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         
+      - name: Configure binfmt for persistent ARM emulation
+        run: |
+          echo "=== Configuring binfmt for persistent ARM emulation ==="
+          
+          # Install qemu-user-static if not already present
+          sudo apt-get update && sudo apt-get install -y qemu-user-static binfmt-support
+          
+          # Apply crankshaft binfmt configuration
+          # This makes ARM binaries work persistently in containers
+          if [ -f /var/lib/binfmts/qemu-arm ]; then
+            sudo sed -i '10s/^$/yes/g' /var/lib/binfmts/qemu-arm
+            echo "Configured qemu-arm for persistent mode"
+          fi
+          
+          if [ -f /var/lib/binfmts/qemu-aarch64 ]; then
+            sudo sed -i '10s/^$/yes/g' /var/lib/binfmts/qemu-aarch64  
+            echo "Configured qemu-aarch64 for persistent mode"
+          fi
+          
+          # Restart binfmt-support to apply changes
+          sudo systemctl restart binfmt-support
+          
+          echo "=== Verifying binfmt configuration ==="
+          echo "ARM emulation test:"
+          docker run --rm arm64v8/busybox echo "ARM64 emulation working" || echo "ARM64 test failed"
+          
       - name: Free up disk space
         run: |
           # Remove unnecessary packages to free up space
