@@ -8,6 +8,14 @@ on:
         required: true
         default: 'DEV'
         type: string
+      release:
+        description: 'Debian Release'
+        required: false
+        default: 'trixie'
+        type: choice
+        options:
+          - trixie
+          - bookworm
   push:
     branches:
       - main
@@ -132,6 +140,7 @@ jobs:
           # Extract version from input or default
           VERSION="${{ github.event.inputs.version || 'DEV' }}"
           ARCH="${{ matrix.arch }}"
+          RELEASE="${{ github.event.inputs.release || 'trixie' }}"
           
           # Get git information
           BUILD_HASH=$(git rev-parse --short "$GITHUB_SHA")
@@ -140,9 +149,9 @@ jobs:
           
           # Create version string
           if [ "$VERSION" = "DEV" ]; then
-            VERSION_STRING="${BUILD_DATE}-${BUILD_BRANCH}-${ARCH}-${BUILD_HASH}"
+            VERSION_STRING="${BUILD_DATE}-${BUILD_BRANCH}-${ARCH}-${RELEASE}-${BUILD_HASH}"
           else
-            VERSION_STRING="${VERSION}-${BUILD_DATE}-${ARCH}-${BUILD_HASH}"
+            VERSION_STRING="${VERSION}-${BUILD_DATE}-${ARCH}-${RELEASE}-${BUILD_HASH}"
           fi
           
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
@@ -151,9 +160,11 @@ jobs:
           echo "buildbranch=${BUILD_BRANCH}" >> $GITHUB_OUTPUT
           echo "builddate=${BUILD_DATE}" >> $GITHUB_OUTPUT
           echo "arch=${ARCH}" >> $GITHUB_OUTPUT
+          echo "release=${RELEASE}" >> $GITHUB_OUTPUT
           
           echo "Build Version: ${VERSION_STRING}"
           echo "Architecture: ${ARCH}"
+          echo "Debian Release: ${RELEASE}"
           echo "Branch: ${{ matrix.branch }}"
           
       - name: Configure pi-gen build
@@ -163,7 +174,7 @@ jobs:
           # Create configuration file for lite image (stage2)
           cat > config <<EOF
           IMG_NAME=${{ steps.get_version.outputs.version_string }}
-          RELEASE=trixie
+          RELEASE=${{ steps.get_version.outputs.release }}
           DEPLOY_COMPRESSION=xz
           LOCALE_DEFAULT=en_GB.UTF-8
           TARGET_HOSTNAME=raspberrypi
@@ -493,6 +504,7 @@ jobs:
           echo "✅ Pi-gen lite image builds completed successfully for both architectures!"
           echo "Version: ${{ needs.build-lite-images.outputs.version }}"
           echo "Date: ${{ needs.build-lite-images.outputs.builddate }}"
+          echo "Debian Release: ${{ github.event.inputs.release || 'trixie' }}"
           echo ""
           echo "Built images:"
           echo "  - ARMv7 (armhf) lite image"
@@ -502,6 +514,7 @@ jobs:
           echo "  - Basic Raspberry Pi OS Lite system"
           echo "  - SSH enabled"
           echo "  - XZ compressed for smaller download size"
+          echo "  - Debian ${{ github.event.inputs.release || 'trixie' }} base"
           
       - name: Build Failure Summary
         if: needs.build-lite-images.result == 'failure'
