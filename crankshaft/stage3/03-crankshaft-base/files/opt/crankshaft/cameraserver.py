@@ -6,7 +6,6 @@ import os
 import threading
 import time
 import datetime as dt
-import imp
 import subprocess
 from threading import Thread
 from PIL import Image
@@ -37,12 +36,16 @@ try:
     print("Using modern picamera2 library")
 except ImportError:
     try:
-        # Fallback to legacy picamera (Buster/Bullseye)
-        imp.find_module('picamera')
-        import picamera
-        from picamera import PiCamera
-        camera_api = "picamera"
-        print("Using legacy picamera library")
+        # Fallback to legacy picamera (Buster/Bullseye) - use modern importlib instead of deprecated imp
+        import importlib.util
+        picamera_spec = importlib.util.find_spec('picamera')
+        if picamera_spec is not None:
+            import picamera
+            from picamera import PiCamera
+            camera_api = "picamera"
+            print("Using legacy picamera library")
+        else:
+            raise ImportError("picamera module not found")
     except ImportError:
         print("No camera library available! Install python3-picamera2 or python3-picamera")
         quit()

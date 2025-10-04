@@ -38,17 +38,31 @@ sed -i 's/#ControllerMode = dual/ControllerMode = bredr/' /etc/bluetooth/main.co
 # Set controller to fast connectable
 sed -i 's/#FastConnectable.*/FastConnectable = true/' /etc/bluetooth/main.conf
 
-#link test script files
-ln -s /usr/share/doc/bluez-test-scripts/examples/list-devices /usr/local/bin/list-devices
-ln -s /usr/share/doc/bluez-test-scripts/examples/monitor-bluetooth /usr/local/bin/monitor-bluetooth
-ln -s /usr/share/doc/bluez-test-scripts/examples/test-adapter /usr/local/bin/test-adapter
-ln -s /usr/share/doc/bluez-test-scripts/examples/test-heartrate /usr/local/bin/test-heartrate
-ln -s /usr/share/doc/bluez-test-scripts/examples/test-manager /usr/local/bin/test-manager
-ln -s /usr/share/doc/bluez-test-scripts/examples/test-nap /usr/local/bin/test-nap
-ln -s /usr/share/doc/bluez-test-scripts/examples/test-network /usr/local/bin/test-network
-ln -s /usr/share/doc/bluez-test-scripts/examples/test-profile /usr/local/bin/test-profile
-ln -s /usr/share/doc/bluez-test-scripts/examples/test-proximity /usr/local/bin/test-proximity
-ln -s /usr/share/doc/bluez-test-scripts/examples/test-sap-server /usr/local/bin/test-sap-server
-ln -s /usr/share/doc/bluez-test-scripts/examples/test-thermometer /usr/local/bin/test-thermometer
+# Link test script files (with compatibility check for different Debian versions)
+# bluez-test-scripts package location changed between Debian versions
+BLUEZ_SCRIPTS_DIR=""
+if [ -d "/usr/share/doc/bluez-test-scripts/examples" ]; then
+    BLUEZ_SCRIPTS_DIR="/usr/share/doc/bluez-test-scripts/examples"
+elif [ -d "/usr/share/bluez/test" ]; then
+    BLUEZ_SCRIPTS_DIR="/usr/share/bluez/test"
+else
+    echo "Warning: Bluez test scripts not found, skipping symlink creation"
+fi
+
+if [ -n "$BLUEZ_SCRIPTS_DIR" ]; then
+    echo "Creating bluez test script symlinks from: $BLUEZ_SCRIPTS_DIR"
+    # Only create symlinks if the source files exist
+    [ -f "$BLUEZ_SCRIPTS_DIR/list-devices" ] && ln -sf "$BLUEZ_SCRIPTS_DIR/list-devices" /usr/local/bin/list-devices
+    [ -f "$BLUEZ_SCRIPTS_DIR/monitor-bluetooth" ] && ln -sf "$BLUEZ_SCRIPTS_DIR/monitor-bluetooth" /usr/local/bin/monitor-bluetooth
+    [ -f "$BLUEZ_SCRIPTS_DIR/test-adapter" ] && ln -sf "$BLUEZ_SCRIPTS_DIR/test-adapter" /usr/local/bin/test-adapter
+    [ -f "$BLUEZ_SCRIPTS_DIR/test-heartrate" ] && ln -sf "$BLUEZ_SCRIPTS_DIR/test-heartrate" /usr/local/bin/test-heartrate
+    [ -f "$BLUEZ_SCRIPTS_DIR/test-manager" ] && ln -sf "$BLUEZ_SCRIPTS_DIR/test-manager" /usr/local/bin/test-manager
+    [ -f "$BLUEZ_SCRIPTS_DIR/test-nap" ] && ln -sf "$BLUEZ_SCRIPTS_DIR/test-nap" /usr/local/bin/test-nap
+    [ -f "$BLUEZ_SCRIPTS_DIR/test-network" ] && ln -sf "$BLUEZ_SCRIPTS_DIR/test-network" /usr/local/bin/test-network
+    [ -f "$BLUEZ_SCRIPTS_DIR/test-profile" ] && ln -sf "$BLUEZ_SCRIPTS_DIR/test-profile" /usr/local/bin/test-profile
+    [ -f "$BLUEZ_SCRIPTS_DIR/test-proximity" ] && ln -sf "$BLUEZ_SCRIPTS_DIR/test-proximity" /usr/local/bin/test-proximity
+    [ -f "$BLUEZ_SCRIPTS_DIR/test-sap-server" ] && ln -sf "$BLUEZ_SCRIPTS_DIR/test-sap-server" /usr/local/bin/test-sap-server
+    [ -f "$BLUEZ_SCRIPTS_DIR/test-thermometer" ] && ln -sf "$BLUEZ_SCRIPTS_DIR/test-thermometer" /usr/local/bin/test-thermometer
+fi
 
 exit 0

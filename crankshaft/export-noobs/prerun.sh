@@ -32,7 +32,7 @@ mkdir -p "${NOOBS_DIR}"
 mount "$ROOT_DEV" "${STAGE_WORK_DIR}/rootfs"
 mount "$BOOT_DEV" "${STAGE_WORK_DIR}/rootfs/boot"
 
-ln -sv "/lib/systemd/system/apply_noobs_os_config.service" "$ROOTFS_DIR/etc/systemd/system/multi-user.target.wants/apply_noobs_os_config.service"
+ln -sv "/usr/lib/systemd/system/apply_noobs_os_config.service" "$ROOTFS_DIR/etc/systemd/system/multi-user.target.wants/apply_noobs_os_config.service"
 
 KERNEL_VER="$(zgrep -oPm 1 "Linux version \K(.*)$" "${STAGE_WORK_DIR}/rootfs/usr/share/doc/raspberrypi-kernel/changelog.Debian.gz" | cut -f-2 -d.)"
 echo "$KERNEL_VER" > "${STAGE_WORK_DIR}/kernel_version"

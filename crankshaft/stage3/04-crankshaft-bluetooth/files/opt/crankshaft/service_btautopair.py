@@ -5,11 +5,23 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from gi.repository import GLib as glib
+try:
+    from gi.repository import GLib as glib
+except ImportError as e:
+    print("Error: python3-gi package is required for Bluetooth auto-pairing")
+    print("Install with: apt-get install python3-gi")
+    exit(1)
 
 import re
-import dbus
-import dbus.mainloop.glib
+
+try:
+    import dbus
+    import dbus.mainloop.glib
+except ImportError as e:
+    print("Error: python3-dbus package is required for Bluetooth auto-pairing")
+    print("Install with: apt-get install python3-dbus")
+    exit(1)
+
 import subprocess
 
 #relevant_ifaces = [ "org.bluez.Adapter1", "org.bluez.Device1" ]
@@ -27,7 +39,8 @@ def dev_connect(path):
 
 def property_changed(interface, changed, invalidated, path):
         iface = interface[interface.rfind(".") + 1:]
-        for name, value in changed.iteritems():
+        # Python 3 compatibility: iteritems() -> items()
+        for name, value in changed.items():
                 val = str(value)
                 print("{%s.PropertyChanged} [%s] %s = %s" % (iface, path, name,val))
 
