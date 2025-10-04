@@ -33,10 +33,10 @@
                 "cwd": "${workspaceFolder}"
             },
             "windows": {
-                "command": "bash",
+                "command": "powershell",
                 "args": [
-                    "-c",
-                    "find . -path './crankshaft/stage*/files/*.sh' -o -path './crankshaft/stage*/files/*/*.sh' -o -path './crankshaft/stage*/files/*/*/*.sh' | xargs shellcheck --format=gcc --severity=style --enable=all --rcfile=.shellcheckrc"
+                    "-Command",
+                    "Get-ChildItem -Path 'crankshaft/stage*/files' -Recurse -Include '*.sh' | ForEach-Object { .\\tools\\shellcheck.exe --format=gcc --severity=style --enable=all --rcfile=.shellcheckrc $_.FullName }"
                 ]
             },
             "linux": {
@@ -116,10 +116,10 @@
                 "cwd": "${workspaceFolder}"
             },
             "windows": {
-                "command": "bash",
+                "command": "powershell",
                 "args": [
-                    "-c",
-                    "find . -path './crankshaft/stage*/files/*.py' -o -path './crankshaft/stage*/files/*/*.py' -o -path './crankshaft/stage*/files/*/*/*.py' | xargs python3 -m pylint --output-format=parseable --reports=no --score=no --rcfile=.pylintrc"
+                    "-Command",
+                    "Get-ChildItem -Path 'crankshaft/stage*/files' -Recurse -Include '*.py' | ForEach-Object { python -m pylint --output-format=parseable --reports=no --score=no --rcfile=.pylintrc $_.FullName }"
                 ]
             },
             "linux": {
@@ -133,16 +133,6 @@
         {
             "label": "Lint Current Python Script (pylint)",
             "type": "shell",
-            "command": "python3",
-            "args": [
-                "-m",
-                "pylint",
-                "--output-format=parseable",
-                "--reports=no",
-                "--score=no",
-                "--rcfile=${workspaceFolder}/.pylintrc",
-                "${file}"
-            ],
             "group": "build",
             "presentation": {
                 "echo": true,
@@ -170,6 +160,18 @@
             },
             "windows": {
                 "command": "python",
+                "args": [
+                    "-m",
+                    "pylint",
+                    "--output-format=parseable",
+                    "--reports=no",
+                    "--score=no",
+                    "--rcfile=${workspaceFolder}/.pylintrc",
+                    "${file}"
+                ]
+            },
+            "linux": {
+                "command": "python3",
                 "args": [
                     "-m",
                     "pylint",
