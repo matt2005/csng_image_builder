@@ -53,6 +53,35 @@ jobs:
           path: pi-gen
           fetch-depth: 1
           
+      - name: Copy build-docker-debug.sh to pi-gen folder
+        run: |
+          echo "Copying build-docker-debug.sh to pi-gen folder..."
+          
+          # Check if build-docker-debug.sh exists in current repo
+          if [ -f "build-docker-debug.sh" ]; then
+            cp build-docker-debug.sh pi-gen/
+            echo "Copied build-docker-debug.sh from root directory"
+          elif [ -f "crankshaft/build-docker-debug.sh" ]; then
+            cp crankshaft/build-docker-debug.sh pi-gen/
+            echo "Copied build-docker-debug.sh from crankshaft directory"
+          else
+            echo "Warning: build-docker-debug.sh not found, using pi-gen's build-docker.sh instead"
+            # Fallback to regular build-docker.sh if it exists
+            if [ -f "pi-gen/build-docker.sh" ]; then
+              cp pi-gen/build-docker.sh pi-gen/build-docker-debug.sh
+              echo "Created build-docker-debug.sh as copy of build-docker.sh"
+            else
+              echo "Error: No build script found!"
+              exit 1
+            fi
+          fi
+          
+          # Make it executable
+          chmod +x pi-gen/build-docker-debug.sh
+          
+          echo "build-docker-debug.sh is ready in pi-gen folder"
+          ls -la pi-gen/build-docker-debug.sh
+          
       - name: Set up QEMU for multi-architecture builds
         uses: docker/setup-qemu-action@v3
         with:
@@ -227,6 +256,9 @@ jobs:
           echo "Current directory: $(pwd)"
           echo "Directory contents:"
           ls -la
+          
+          # Ensure both build scripts are executable
+          chmod +x build-docker.sh build-docker-debug.sh
           
           # Check if config file exists
           if [ ! -f config ]; then
