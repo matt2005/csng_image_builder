@@ -1,0 +1,85 @@
+[MAIN]
+# Python version to target for version-specific checks
+py-version = 3.8
+
+# Files or directories to be skipped
+ignore = .git,__pycache__,.pytest_cache
+
+# Load plugins
+load-plugins = pylint.extensions.code_style,
+               pylint.extensions.comparison_placement
+
+[MESSAGES CONTROL]
+# Disable specific warnings that are not relevant for this project
+disable = missing-module-docstring,
+          missing-class-docstring,
+          missing-function-docstring,
+          too-few-public-methods,
+          invalid-name,
+          line-too-long,
+          consider-using-f-string
+
+# Enable all checker plugins
+enable = all
+
+[FORMAT]
+# Maximum number of characters on a single line (PEP 8 standard)
+max-line-length = 88
+
+# Number of spaces of indent required inside a hanging or continued line
+indent-string = '    '
+
+# Expected format of line ending, e.g. empty (any line ending), LF or CRLF
+expected-line-ending-format = LF
+
+[BASIC]
+# Naming conventions following PEP 8
+# Good variable names which should always be accepted
+good-names = i,j,k,ex,Run,_,x,y,z,id,fd,db,api
+
+# Regular expressions for different naming conventions
+function-rgx = [a-z_][a-z0-9_]{2,30}$
+variable-rgx = [a-z_][a-z0-9_]{2,30}$
+const-rgx = (([A-Z_][A-Z0-9_]*)|(__.*__))$
+class-rgx = [A-Z_][a-zA-Z0-9]+$
+module-rgx = (([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
+
+[DESIGN]
+# Maximum number of arguments for function / method
+max-args = 7
+
+# Maximum number of locals for function / method body
+max-locals = 15
+
+# Maximum number of return / yield for function / method body
+max-returns = 6
+
+# Maximum number of branch for function / method body
+max-branches = 12
+
+# Maximum number of statements in function / method body
+max-statements = 50
+
+[SIMILARITIES]
+# Minimum lines number of a similarity
+min-similarity-lines = 4
+
+# Ignore comments when computing similarities
+ignore-comments = yes
+
+# Ignore docstrings when computing similarities
+ignore-docstrings = yes
+
+# Ignore imports when computing similarities
+ignore-imports = no
+
+[TYPECHECK]
+# List of module names for which member attributes should not be checked
+ignored-modules = RPi,RPi.GPIO,picamera,picamera2,smbus,gi,dbus
+
+# List of class names for which member attributes should not be checked
+ignored-classes = PiCamera,Picamera2
+
+[IMPORTS]
+# Force import order to follow PEP 8
+known-third-party = RPi,picamera,picamera2,smbus,dbus,gi

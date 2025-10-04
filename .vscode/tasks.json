@@ -1,0 +1,235 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Lint Shell Scripts (shellcheck)",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": {
+                "owner": "shellcheck",
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^(.+?):(\\d+):(\\d+):\\s+(error|warning|info|style):\\s+(.+)\\s+\\[([A-Z0-9]+)\\]$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5,
+                    "code": 6
+                }
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "windows": {
+                "command": "bash",
+                "args": [
+                    "-c",
+                    "find . -path './crankshaft/stage*/files/*.sh' -o -path './crankshaft/stage*/files/*/*.sh' -o -path './crankshaft/stage*/files/*/*/*.sh' | xargs shellcheck --format=gcc --severity=style --enable=all --rcfile=.shellcheckrc"
+                ]
+            },
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "-c",
+                    "find . -path './crankshaft/stage*/files/*.sh' -o -path './crankshaft/stage*/files/*/*.sh' -o -path './crankshaft/stage*/files/*/*/*.sh' | xargs shellcheck --format=gcc --severity=style --enable=all --rcfile=.shellcheckrc"
+                ]
+            }
+        },
+        {
+            "label": "Lint Current Shell Script (shellcheck)",
+            "type": "shell",
+            "command": "shellcheck",
+            "args": [
+                "--format=gcc",
+                "--severity=style",
+                "--enable=all",
+                "--rcfile=${workspaceFolder}/.shellcheckrc",
+                "${file}"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": {
+                "owner": "shellcheck",
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^(.+?):(\\d+):(\\d+):\\s+(error|warning|info|style):\\s+(.+)\\s+\\[([A-Z0-9]+)\\]$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5,
+                    "code": 6
+                }
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Lint Python Scripts (pylint)",
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": {
+                "owner": "pylint",
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^(.+?):(\\d+):(\\d+):\\s+(\\w+)\\s+\\((.+?)\\)\\s+(.+)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "code": 5,
+                    "message": 6
+                }
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "windows": {
+                "command": "bash",
+                "args": [
+                    "-c",
+                    "find . -path './crankshaft/stage*/files/*.py' -o -path './crankshaft/stage*/files/*/*.py' -o -path './crankshaft/stage*/files/*/*/*.py' | xargs python3 -m pylint --output-format=parseable --reports=no --score=no --rcfile=.pylintrc"
+                ]
+            },
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "-c",
+                    "find . -path './crankshaft/stage*/files/*.py' -o -path './crankshaft/stage*/files/*/*.py' -o -path './crankshaft/stage*/files/*/*/*.py' | xargs python3 -m pylint --output-format=parseable --reports=no --score=no --rcfile=.pylintrc"
+                ]
+            }
+        },
+        {
+            "label": "Lint Current Python Script (pylint)",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "-m",
+                "pylint",
+                "--output-format=parseable",
+                "--reports=no",
+                "--score=no",
+                "--rcfile=${workspaceFolder}/.pylintrc",
+                "${file}"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": {
+                "owner": "pylint",
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^(.+?):(\\d+):(\\d+):\\s+(\\w+)\\s+\\((.+?)\\)\\s+(.+)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "code": 5,
+                    "message": 6
+                }
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "windows": {
+                "command": "python",
+                "args": [
+                    "-m",
+                    "pylint",
+                    "--output-format=parseable",
+                    "--reports=no",
+                    "--score=no",
+                    "--rcfile=${workspaceFolder}/.pylintrc",
+                    "${file}"
+                ]
+            }
+        },
+        {
+            "label": "Lint All Scripts (shellcheck + pylint)",
+            "dependsOrder": "parallel",
+            "dependsOn": [
+                "Lint Shell Scripts (shellcheck)",
+                "Lint Python Scripts (pylint)"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "Install Linting Tools",
+            "type": "shell",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "windows": {
+                "command": "powershell",
+                "args": [
+                    "-Command",
+                    "Write-Host 'Installing linting tools for Windows...'; if (!(Get-Command shellcheck -ErrorAction SilentlyContinue)) { Write-Host 'Please install shellcheck manually from https://github.com/koalaman/shellcheck/releases or via scoop/chocolatey' } else { Write-Host 'shellcheck already installed' }; python -m pip install --user pylint; Write-Host 'Linting tools setup completed!'"
+                ]
+            },
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "-c",
+                    "echo 'Installing linting tools for Linux...' && sudo apt-get update && sudo apt-get install -y shellcheck python3-pip && python3 -m pip install --user pylint && echo 'Linting tools installed successfully!'"
+                ]
+            }
+        }
+    ]
+}
