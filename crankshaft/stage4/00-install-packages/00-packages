@@ -1,6 +1,9 @@
-rpd-applications
-rpd-developer
-rpd-graphics
-rpd-utilities
-rpd-wayland-extras
-rpd-x-extras
+# Desktop metapackages - optional for OpenAuto builds
+# Commented out due to network issues with archive.raspberrypi.com
+# These can be enabled if desktop environment is needed
+#rpd-applications
+#rpd-developer
+#rpd-graphics
+#rpd-utilities
+#rpd-wayland-extras
+#rpd-x-extras
