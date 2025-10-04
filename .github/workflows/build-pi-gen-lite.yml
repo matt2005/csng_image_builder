@@ -163,13 +163,13 @@ jobs:
           # Create configuration file for lite image (stage2)
           cat > config <<EOF
           IMG_NAME=${{ steps.get_version.outputs.version_string }}
-          RELEASE=bookworm
+          RELEASE=trixie
           DEPLOY_COMPRESSION=xz
-          LOCALE_DEFAULT=en_US.UTF-8
+          LOCALE_DEFAULT=en_GB.UTF-8
           TARGET_HOSTNAME=raspberrypi
-          KEYBOARD_KEYMAP=us
-          KEYBOARD_LAYOUT="English (US)"
-          TIMEZONE_DEFAULT=UTC
+          KEYBOARD_KEYMAP=gb
+          KEYBOARD_LAYOUT="English (UK)"
+          TIMEZONE_DEFAULT=Europe/London
           FIRST_USER_NAME=pi
           FIRST_USER_PASS=raspberry
           ENABLE_SSH=1
@@ -294,6 +294,62 @@ jobs:
           GIT_HASH: ${{ steps.get_version.outputs.buildhash }}
           GIT_BRANCH: ${{ steps.get_version.outputs.buildbranch }}
           
+      - name: Extract logs and artifacts from Docker container
+        if: always()
+        working-directory: pi-gen
+        run: |
+          echo "=== Extracting logs and artifacts from Docker container ==="
+          
+          # Get the most recent pi-gen container
+          CONTAINER_ID=$(docker ps -a --filter "ancestor=pi-gen" --format "{{.ID}}" | head -n 1)
+          
+          if [ -n "$CONTAINER_ID" ]; then
+            echo "Found pi-gen container: $CONTAINER_ID"
+            
+            # Create extraction directory
+            mkdir -p extracted-container
+            
+            # Extract work directory (contains logs)
+            echo "Extracting work directory..."
+            docker cp "$CONTAINER_ID:/pi-gen/work/" ./extracted-container/ 2>/dev/null || echo "Failed to extract work directory"
+            
+            # Extract deploy directory (contains built images)
+            echo "Extracting deploy directory..."
+            docker cp "$CONTAINER_ID:/pi-gen/deploy/" ./extracted-container/ 2>/dev/null || echo "Failed to extract deploy directory"
+            
+            # Get container logs
+            echo "Getting container logs..."
+            docker logs "$CONTAINER_ID" > extracted-container/docker-container.log 2>&1 || echo "Failed to get container logs"
+            
+            # List what we extracted
+            echo "Extracted content:"
+            find extracted-container -type f 2>/dev/null | head -20 || echo "No files found in extraction"
+            
+          else
+            echo "No pi-gen container found"
+            echo "Available containers:"
+            docker ps -a
+            
+            # Fallback: check if directories exist on host (volume mounts)
+            mkdir -p extracted-container
+            if [ -d work ]; then
+              echo "Found work directory on host, copying..."
+              cp -r work extracted-container/ 2>/dev/null || echo "Failed to copy work directory"
+            fi
+            if [ -d deploy ]; then
+              echo "Found deploy directory on host, copying..."
+              cp -r deploy extracted-container/ 2>/dev/null || echo "Failed to copy deploy directory"
+            fi
+          fi
+          
+          echo "=== Final extraction summary ==="
+          echo "Host deploy directory:"
+          ls -la deploy/ 2>/dev/null || echo "No host deploy directory"
+          echo "Extracted container content:"
+          find extracted-container -name "deploy" -type d -exec ls -la {} \; 2>/dev/null || echo "No extracted deploy directory"
+          echo "Log files found:"
+          find extracted-container -name "*.log" -type f 2>/dev/null || echo "No log files in extraction"
+          
       - name: Verify build output
         working-directory: pi-gen
         run: |
@@ -406,8 +462,9 @@ jobs:
           name: pi-gen-lite-${{ matrix.arch }}-${{ steps.get_version.outputs.builddate }}-${{ steps.get_version.outputs.version }}
           path: |
             pi-gen/deploy/
-            pi-gen/work/*/build.log
-            pi-gen/work/stage*/debootstrap.log
+            pi-gen/extracted-container/deploy/
+            pi-gen/extracted-container/work/
+            pi-gen/extracted-container/docker-container.log
           retention-days: 30
           
       - name: Upload build logs on failure
@@ -416,9 +473,9 @@ jobs:
         with:
           name: build-logs-failure-${{ matrix.arch }}-${{ steps.get_version.outputs.builddate }}-${{ steps.get_version.outputs.version }}
           path: |
-            pi-gen/work/*/build.log
-            pi-gen/work/stage*/debootstrap.log
-            pi-gen/work/stage*/*.log
+            pi-gen/extracted-container/
+            pi-gen/work/
+            pi-gen/deploy/
             pi-gen/*.log
           retention-days: 7
 
