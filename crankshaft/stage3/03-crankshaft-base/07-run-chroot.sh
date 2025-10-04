@@ -3,7 +3,8 @@
 # Check if we're running on a Debian version before Bookworm
 # VideoCore legacy libraries were deprecated in Bookworm and removed in Trixie
 if [ -f /etc/os-release ]; then
-    source /etc/os-release
+    # Safely extract VERSION_ID without sourcing the file
+    VERSION_ID=$(grep '^VERSION_ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
     # Extract version number (11 for Bullseye, 12 for Bookworm, 13 for Trixie)
     DEBIAN_VERSION=$(echo "$VERSION_ID" | cut -d. -f1)
     

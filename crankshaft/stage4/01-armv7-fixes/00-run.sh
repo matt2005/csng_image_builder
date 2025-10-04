@@ -4,7 +4,8 @@
 # Prebuilt Qt5 OpenGLES2 was compiled for VideoCore drivers (Buster/Bullseye)
 # Modern Debian versions (Bookworm+) use Mesa drivers and may conflict with this prebuilt version
 if [ -f "${ROOTFS_DIR}/etc/os-release" ]; then
-    source "${ROOTFS_DIR}/etc/os-release"
+    # Safely extract VERSION_ID without sourcing the file
+    VERSION_ID=$(grep '^VERSION_ID=' "${ROOTFS_DIR}/etc/os-release" | cut -d= -f2 | tr -d '"')
     # Extract version number (11 for Bullseye, 12 for Bookworm, 13 for Trixie)
     DEBIAN_VERSION=$(echo "$VERSION_ID" | cut -d. -f1)
     
