@@ -235,14 +235,21 @@ echo "net.core.rmem_max = 16777216" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_rmem = 4096 87380 16777216" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_wmem = 4096 16384 16777216" >> /etc/sysctl.conf
 
-# Later start cpufrequtils
-sed -i 's/# Required-Start: $remote_fs loadcpufreq.*/# Required-Start: $remote_fs loadcpufreq rc.local/' /etc/init.d/cpufrequtils
+# Later start cpufrequtils / cpupower (version-dependent)
+if [ -f /etc/init.d/cpufrequtils ]; then
+    # Legacy cpufrequtils (Buster/Bullseye)
+    sed -i 's/# Required-Start: $remote_fs loadcpufreq.*/# Required-Start: $remote_fs loadcpufreq rc.local/' /etc/init.d/cpufrequtils
+    sed -i 's/^GOVERNOR=.*/GOVERNOR="performance"/' /etc/init.d/cpufrequtils
+    echo "Configured legacy cpufrequtils for performance governor"
+else
+    # Modern cpupower approach (Bookworm/Trixie)
+    # Set performance governor for all CPUs (will be applied on boot via systemd service)
+    echo 'ACTION=="add", KERNEL=="cpu[0-9]*", RUN+="/usr/bin/cpupower frequency-set -g performance"' > /etc/udev/rules.d/99-cpu-performance.rules
+    echo "Configured modern cpupower via udev rules for performance governor"
+fi
 
 # Don't kill processes after exit session
 sed -i 's/#KillUserProcesses=.*/KillUserProcesses=no/' /etc/systemd/logind.conf
-
-# Boost system performance
-sed -i 's/^GOVERNOR=.*/GOVERNOR="performance"/' /etc/init.d/cpufrequtils
 
 # Grant access to system wide pulseaudio
 usermod -G pulse,pulse-access -a root

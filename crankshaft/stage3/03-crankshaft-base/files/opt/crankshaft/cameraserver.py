@@ -26,13 +26,269 @@ else:
     os.system("sudo chmod 777 /tmp/RPIDC -R")
     recordpath = "/tmp/RPIDC/"
     storagepath = "/tmp/RPIDC/"
+
+# Camera library compatibility layer
+camera_api = None
 try:
-    imp.find_module('picamera')
-    import picamera
-    from picamera import PiCamera
+    # Try modern picamera2 first (Trixie/Bookworm+)
+    from picamera2 import Picamera2
+    from libcamera import controls, Transform
+    camera_api = "picamera2"
+    print("Using modern picamera2 library")
 except ImportError:
-    print("Python2 PiCamera modul is missing!")
-    quit()
+    try:
+        # Fallback to legacy picamera (Buster/Bullseye)
+        imp.find_module('picamera')
+        import picamera
+        from picamera import PiCamera
+        camera_api = "picamera"
+        print("Using legacy picamera library")
+    except ImportError:
+        print("No camera library available! Install python3-picamera2 or python3-picamera")
+        quit()
+
+class CameraWrapper:
+    """Compatibility wrapper for picamera and picamera2 APIs"""
+    
+    def __init__(self):
+        self.api = camera_api
+        self.recording = False
+        self.preview_active = False
+        self._annotate_text = ""
+        self._annotate_background = None
+        self._annotate_text_size = 20
+        
+        if self.api == "picamera2":
+            self.camera = Picamera2()
+            self.video_config = self.camera.create_video_configuration(main={"size": (1920, 1080)})
+            self.preview_config = self.camera.create_preview_configuration(main={"size": (1920, 1080)})
+            self.camera.configure(self.preview_config)
+            self.camera.start()
+            
+            # Default values for picamera2
+            self._resolution = (1920, 1080)
+            self._rotation = 0
+            self._framerate = 30
+            self._awb_mode = "auto"
+            self._exposure_mode = "auto"
+            self._hflip = False
+            self._vflip = False
+        else:
+            self.camera = PiCamera()
+            # picamera defaults
+            self._resolution = (1920, 1080)
+            self._rotation = 0
+            self._framerate = 30
+            self._awb_mode = "auto"
+            self._exposure_mode = "auto"
+            self._hflip = False
+            self._vflip = False
+            
+    @property
+    def resolution(self):
+        return self._resolution
+        
+    @resolution.setter
+    def resolution(self, value):
+        self._resolution = value
+        if self.api == "picamera":
+            self.camera.resolution = value
+        else:
+            # For picamera2, need to reconfigure
+            if value == (1920, 1080):
+                self._annotate_text_size = 80
+            elif value == (1280, 720):
+                self._annotate_text_size = 40
+            else:
+                self._annotate_text_size = 20
+            self.video_config = self.camera.create_video_configuration(main={"size": value})
+            self.preview_config = self.camera.create_preview_configuration(main={"size": value})
+            
+    @property
+    def rotation(self):
+        return self._rotation
+        
+    @rotation.setter
+    def rotation(self, value):
+        self._rotation = value
+        if self.api == "picamera":
+            self.camera.rotation = value
+        else:
+            # picamera2 uses Transform
+            transform = Transform()
+            if value == 90:
+                transform = Transform(rotation=90)
+            elif value == 180:
+                transform = Transform(rotation=180)
+            elif value == 270:
+                transform = Transform(rotation=270)
+            # Apply transform in next configure
+            
+    @property
+    def framerate(self):
+        return self._framerate
+        
+    @framerate.setter
+    def framerate(self, value):
+        self._framerate = value
+        if self.api == "picamera":
+            self.camera.framerate = value
+        # picamera2 framerate is set in configuration
+            
+    @property
+    def awb_mode(self):
+        return self._awb_mode
+        
+    @awb_mode.setter
+    def awb_mode(self, value):
+        self._awb_mode = value
+        if self.api == "picamera":
+            self.camera.awb_mode = value
+        else:
+            # picamera2 uses controls
+            awb_map = {
+                'auto': controls.AwbModeEnum.Auto,
+                'off': controls.AwbModeEnum.Manual,
+                'sunlight': controls.AwbModeEnum.Daylight,
+                'cloudy': controls.AwbModeEnum.Cloudy,
+                'shade': controls.AwbModeEnum.Shade,
+                'tungsten': controls.AwbModeEnum.Tungsten,
+                'fluorescent': controls.AwbModeEnum.Fluorescent,
+                'incandescent': controls.AwbModeEnum.Incandescent,
+                'flash': controls.AwbModeEnum.Flash,
+                'horizon': controls.AwbModeEnum.Auto  # fallback
+            }
+            if value in awb_map:
+                self.camera.set_controls({"AwbMode": awb_map[value]})
+                
+    @property
+    def exposure_mode(self):
+        return self._exposure_mode
+        
+    @exposure_mode.setter
+    def exposure_mode(self, value):
+        self._exposure_mode = value
+        if self.api == "picamera":
+            self.camera.exposure_mode = value
+        else:
+            # picamera2 uses AeEnable and manual controls
+            if value == "auto":
+                self.camera.set_controls({"AeEnable": True})
+            elif value == "off":
+                self.camera.set_controls({"AeEnable": False})
+            # Other modes would need specific control mappings
+                
+    @property
+    def hflip(self):
+        return self._hflip
+        
+    @hflip.setter
+    def hflip(self, value):
+        self._hflip = value
+        if self.api == "picamera":
+            self.camera.hflip = value
+        else:
+            # picamera2 uses Transform
+            transform = Transform(hflip=value, vflip=self._vflip)
+            # Apply in next configure
+            
+    @property
+    def vflip(self):
+        return self._vflip
+        
+    @vflip.setter
+    def vflip(self, value):
+        self._vflip = value
+        if self.api == "picamera":
+            self.camera.vflip = value
+        else:
+            # picamera2 uses Transform
+            transform = Transform(hflip=self._hflip, vflip=value)
+            # Apply in next configure
+            
+    @property
+    def annotate_text(self):
+        return self._annotate_text
+        
+    @annotate_text.setter
+    def annotate_text(self, value):
+        self._annotate_text = value
+        if self.api == "picamera":
+            self.camera.annotate_text = value
+        # picamera2 doesn't have built-in annotation, would need overlay
+        
+    @property
+    def annotate_background(self):
+        return self._annotate_background
+        
+    @annotate_background.setter
+    def annotate_background(self, value):
+        self._annotate_background = value
+        if self.api == "picamera":
+            self.camera.annotate_background = value
+        # picamera2 doesn't have built-in annotation background
+        
+    @property
+    def annotate_text_size(self):
+        return self._annotate_text_size
+        
+    @annotate_text_size.setter
+    def annotate_text_size(self, value):
+        self._annotate_text_size = value
+        if self.api == "picamera":
+            self.camera.annotate_text_size = value
+        # picamera2 doesn't have built-in annotation sizing
+        
+    def start_preview(self, **kwargs):
+        if self.api == "picamera":
+            self.camera.start_preview(**kwargs)
+        else:
+            # picamera2 preview is always running after start()
+            pass
+        self.preview_active = True
+        
+    def stop_preview(self):
+        if self.api == "picamera":
+            self.camera.stop_preview()
+        # picamera2 doesn't stop preview separately
+        self.preview_active = False
+        
+    def start_recording(self, output, **kwargs):
+        if self.api == "picamera":
+            self.camera.start_recording(output, **kwargs)
+        else:
+            # picamera2 recording
+            if not self.recording:
+                self.camera.configure(self.video_config)
+                self.camera.start_recording(output, **kwargs)
+        self.recording = True
+        
+    def stop_recording(self):
+        if self.recording:
+            self.camera.stop_recording()
+            if self.api == "picamera2":
+                # Switch back to preview config
+                self.camera.configure(self.preview_config)
+        self.recording = False
+        
+    def add_overlay(self, source, **kwargs):
+        if self.api == "picamera":
+            return self.camera.add_overlay(source, **kwargs)
+        else:
+            # picamera2 overlay would need different implementation
+            # Return dummy overlay object for compatibility
+            class DummyOverlay:
+                def __init__(self):
+                    self.alpha = 0
+                    self.layer = 0
+            return DummyOverlay()
+            
+    def close(self):
+        if self.recording:
+            self.stop_recording()
+        if self.api == "picamera2":
+            self.camera.stop()
+        self.camera.close()
 
 def get_var(varname):
     #print("Request:" + varname)
@@ -64,8 +320,8 @@ resarray = rescheck.split(' ')
 resx = int(resarray[1])
 resy = int(resarray[2])
 
-# Initial Parameters for Cam
-camera = PiCamera()
+# Initialize camera with compatibility wrapper
+camera = CameraWrapper()
 if (get_var('RPICAM_RESOLUTION') == "1080"):
     camera.resolution = (1920, 1080)
     camera.annotate_text_size = 80
@@ -299,14 +555,16 @@ while exit != 1:
         else:
             if camera_recording == 0:
                 if loop_recording == 0:
-                    camera.annotate_background = picamera.Color('black')
+                    if camera.api == "picamera":
+                        camera.annotate_background = picamera.Color('black')
                     camera.annotate_text = "RPi-Dashcam - " + dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
                     camera.start_recording(
                     recordpath + 'RPIDC_' + dt.datetime.now().strftime('%d%m%Y') + '_' + dt.datetime.now().strftime('%H%M%S') + '.h264')
                     camera_recording = 1
                     updateStatus()
                 else:
-                    camera.annotate_background = picamera.Color('black')
+                    if camera.api == "picamera":
+                        camera.annotate_background = picamera.Color('black')
                     camera.annotate_text = "RPi-Dashcam - " + dt.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
                     camera.start_recording(recordpath + 'RPIDC_' + dt.datetime.now().strftime('%d%m%Y') + '.h264')
                     camera_recording = 1
