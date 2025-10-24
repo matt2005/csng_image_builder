@@ -90,6 +90,25 @@ jobs:
           echo "build-docker-debug.sh is ready in pi-gen folder"
           ls -la pi-gen/build-docker-debug.sh
           
+      - name: Copy stage60 to pi-gen folder
+        run: |
+          echo "Copying stage60 to pi-gen folder..."
+          
+          # Check if stage60 exists in stages directory
+          if [ -d "stages/stage60" ]; then
+            cp -r stages/stage60 pi-gen/
+            echo "Copied stage60 from stages directory"
+          else
+            echo "Error: stage60 not found in stages directory!"
+            exit 1
+          fi
+          
+          # Make all scripts executable
+          find pi-gen/stage60 -type f -name "*.sh" -exec chmod +x {} \;
+          
+          echo "stage60 is ready in pi-gen folder"
+          ls -la pi-gen/stage60/
+          
       - name: Set up QEMU for multi-architecture builds
         uses: docker/setup-qemu-action@v3
         with:
@@ -186,7 +205,7 @@ jobs:
           ENABLE_SSH=1
           PUBKEY_SSH_FIRST_USER=""
           PUBKEY_ONLY_SSH=0
-          STAGE_LIST="stage0 stage1 stage2"
+          STAGE_LIST="stage0 stage1 stage2 stage60"
           EOF
           
           # Make all shell scripts executable
