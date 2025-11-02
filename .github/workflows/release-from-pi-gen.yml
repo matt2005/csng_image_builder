@@ -133,7 +133,8 @@ jobs:
           export LIBGUESTFS_BACKEND=direct
           mkdir -p sbom_tmp mnt
           shopt -s nullglob
-          for src in release_assets/*-opencardev*; do
+          # Process only image artifacts
+          for src in release_assets/*-opencardev*.img release_assets/*-opencardev*.img.xz release_assets/*-opencardev*.zip; do
             base=$(basename "$src")
             img=""
             tmp_created=0
@@ -172,9 +173,9 @@ jobs:
             cdx="release_assets/${base%.xz}.sbom.cyclonedx.json"
             spdx="release_assets/${base%.xz}.sbom.spdx.json"
             echo "Generating CycloneDX -> $cdx"
-            syft dir:mnt -o cyclonedx-json > "$cdx" || echo "Failed to create CycloneDX SBOM for $base"
+            sudo syft dir:mnt -o cyclonedx-json > "$cdx" || echo "Failed to create CycloneDX SBOM for $base"
             echo "Generating SPDX -> $spdx"
-            syft dir:mnt -o spdx-json > "$spdx" || echo "Failed to create SPDX SBOM for $base"
+            sudo syft dir:mnt -o spdx-json > "$spdx" || echo "Failed to create SPDX SBOM for $base"
 
             # Optionally extract the embedded versions file from boot
             if [ -f mnt/boot/opencardev/versions.txt ]; then
