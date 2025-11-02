@@ -100,8 +100,8 @@ jobs:
           if [ -z "$version" ]; then version="${{ inputs.version || 'DEV' }}"; fi
 
           # Tag and name
-          tag="pi-gen-lite-${builddate}-${version}"
-          name="Pi-gen Lite ${builddate} (${version})"
+          tag="crankshaft-${builddate}-${version}"
+          name="Crankshaft ${builddate} (${version})"
 
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "name=$name" >> "$GITHUB_OUTPUT"
