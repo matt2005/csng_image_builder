@@ -350,6 +350,19 @@ jobs:
             # Get container logs
             echo "Getting container logs..."
             docker logs "$CONTAINER_ID" > extracted-container/docker-container.log 2>&1 || echo "Failed to get container logs"
+
+            # Try to extract OpenCarDev metadata generated inside the chroot
+            echo "Extracting OpenCarDev metadata (versions and SBOM) if present..."
+            mkdir -p extracted-container/opencardev
+            # Find possible paths within work dir
+            METAPATH=$(docker exec "$CONTAINER_ID" /bin/sh -lc 'ls -d /pi-gen/work/*/stage60/rootfs/etc/opencardev 2>/dev/null | head -n 1') || true
+            if [ -n "$METAPATH" ]; then
+              echo "Found metadata path: $METAPATH"
+              docker cp "$CONTAINER_ID:${METAPATH}/" ./extracted-container/opencardev/ 2>/dev/null || echo "Failed to copy metadata files"
+              ls -la extracted-container/opencardev/ || true
+            else
+              echo "No metadata directory found in container work tree"
+            fi
             
             # List what we extracted
             echo "Extracted content:"
@@ -494,6 +507,7 @@ jobs:
             pi-gen/deploy/
             pi-gen/extracted-container/deploy/
             pi-gen/extracted-container/work/
+            pi-gen/extracted-container/opencardev/
             pi-gen/extracted-container/docker-container.log
           retention-days: 30
           

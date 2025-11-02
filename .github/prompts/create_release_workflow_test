@@ -1,0 +1,14 @@
+---
+mode: agent
+---
+add creation of release to a separate workflow that is triggered from the build-pi-gen-lite.yml.
+the release pipeline needs to create a release with the change log and include which versions of libaasdk and openauto are used.
+Please include only the images with the suffix "-opencardev' remember to create and include the SHA256 hashes int he release notes aswell as an attachment.
+
+Additionally create a separate md fiel with installation information detailing how to create the sd card from the image also include creating ssd version too.
+
+include a link to the installation document in the release notes.
+
+also please maintain a changelog.
+
+Add a SBOM using CycloneDx and add a metadata file to the boot partition link /boot/opencardev/versions.txt
