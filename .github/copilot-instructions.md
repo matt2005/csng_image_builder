@@ -28,6 +28,14 @@ This project is a refactor of the repo found at https://github.com/opencardev/cr
 - `/tests`: Contains test cases and testing scripts.
 - `/build`: Contains build scripts and related files.
 
+## Workflow/Pipeline
+- Use GitHub Actions for CI/CD pipelines.
+- Automate testing, building, and deployment processes.
+- Use separate workflows for different tasks (e.g., testing, building, releasing).
+- Ensure workflows are well-documented and easy to understand.
+- Use Full path to GH cli when debugging, testing, or running workflows.
+
+
 ## Coding Standards
 
 - Create new files using the provided header template.
