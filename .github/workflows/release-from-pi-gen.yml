@@ -256,9 +256,9 @@ jobs:
           echo >> release_notes.md
           echo "### SHA256 checksums" >> release_notes.md
           echo >> release_notes.md
-          echo '\`\`\`' >> release_notes.md
-          cat release_assets/SHA256SUMS-opencardev.txt >> release_notes.md
-          echo '\`\`\`' >> release_notes.md
+            echo "```" >> release_notes.md
+            cat release_assets/SHA256SUMS-opencardev.txt >> release_notes.md
+            echo "```" >> release_notes.md
           echo >> release_notes.md
           echo "### Package versions" >> release_notes.md
           echo >> release_notes.md
