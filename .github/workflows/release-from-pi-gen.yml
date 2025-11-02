@@ -172,10 +172,21 @@ jobs:
             # Generate SBOMs
             cdx="release_assets/${base%.xz}.sbom.cyclonedx.json"
             spdx="release_assets/${base%.xz}.sbom.spdx.json"
+            # Friendly source metadata for SBOMs
+            src_name="$base"
+            src_name="${src_name%.xz}"
+            src_name="${src_name%.img}"
+            src_version='${{ steps.collect.outputs.version }}'
             echo "Generating CycloneDX -> $cdx"
-            sudo syft dir:mnt -o cyclonedx-json > "$cdx" || echo "Failed to create CycloneDX SBOM for $base"
+            SYFT_LOG_LEVEL=error sudo syft dir:mnt \
+              --source-name "$src_name" \
+              --source-version "$src_version" \
+              -o cyclonedx-json > "$cdx" || echo "Failed to create CycloneDX SBOM for $base"
             echo "Generating SPDX -> $spdx"
-            sudo syft dir:mnt -o spdx-json > "$spdx" || echo "Failed to create SPDX SBOM for $base"
+            SYFT_LOG_LEVEL=error sudo syft dir:mnt \
+              --source-name "$src_name" \
+              --source-version "$src_version" \
+              -o spdx-json > "$spdx" || echo "Failed to create SPDX SBOM for $base"
 
             # Optionally extract the embedded versions file from boot
             if [ -f mnt/boot/opencardev/versions.txt ]; then
