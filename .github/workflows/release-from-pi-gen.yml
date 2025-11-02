@@ -1,9 +1,11 @@
 name: release-from-pi-gen
 
+
 on:
   workflow_run:
     workflows: ["build-pi-gen-lite"]
     types: [completed]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -281,5 +283,6 @@ jobs:
           files: |
             release_assets/*
             ${{ steps.versions.outputs.sbom_path }}
+          overwrite: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
