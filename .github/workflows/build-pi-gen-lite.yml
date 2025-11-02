@@ -16,6 +16,16 @@ on:
         options:
           - trixie
           - bookworm
+      auto_release:
+        description: 'Automatically create a GitHub release from this build'
+        required: false
+        default: false
+        type: boolean
+      create_release_draft:
+        description: 'Create the release as a draft'
+        required: false
+        default: false
+        type: boolean
   push:
     branches:
       - main
@@ -548,6 +558,24 @@ jobs:
           echo "  - SSH enabled"
           echo "  - XZ compressed for smaller download size"
           echo "  - Debian ${{ github.event.inputs.release || 'trixie' }} base"
+
+      - name: Publish run ID and release helper
+        if: needs.build-lite-images.result == 'success'
+        run: |
+          echo "Build Run ID: ${{ github.run_id }}" | tee run-info.txt
+          echo "Version: ${{ needs.build-lite-images.outputs.version }}" | tee -a run-info.txt
+          echo "Build Date: ${{ needs.build-lite-images.outputs.builddate }}" | tee -a run-info.txt
+          echo "\nTo create a release from these artifacts, run:" | tee -a run-info.txt
+          echo "  gh workflow run release-from-pi-gen.yml -f build_run_id=${{ github.run_id }} -f version='${{ needs.build-lite-images.outputs.version }}'" | tee -a run-info.txt
+          echo "\nOr dispatch via UI and provide build_run_id=${{ github.run_id }}" | tee -a run-info.txt
+
+      - name: Upload run info
+        if: needs.build-lite-images.result == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-run-info-${{ needs.build-lite-images.outputs.builddate }}
+          path: run-info.txt
+          retention-days: 30
           
       - name: Build Failure Summary
         if: needs.build-lite-images.result == 'failure'
@@ -578,3 +606,15 @@ jobs:
           echo "❌ Pi-gen lite build failed!"
           echo "Check the build logs for details."
           exit 1
+
+  # Optional automatic release job using the reusable release workflow
+  create-release:
+    name: Create Release (optional)
+    needs: [build-lite-images]
+    if: ${{ needs.build-lite-images.result == 'success' && ((github.event_name == 'workflow_dispatch' && github.event.inputs.auto_release == 'true') || (github.event_name == 'push' && github.ref == 'refs/heads/main')) }}
+    uses: ./.github/workflows/release-from-pi-gen.yml
+    with:
+      build_run_id: ${{ github.run_id }}
+      version: ${{ needs.build-lite-images.outputs.version }}
+      create_draft: ${{ github.event.inputs.create_release_draft == 'true' }}
+    secrets: inherit
