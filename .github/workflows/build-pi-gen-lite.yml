@@ -38,6 +38,9 @@ on:
 env:
   DEBIAN_FRONTEND: noninteractive
 
+permissions:
+  contents: write
+
 jobs:
   build-lite-images:
     runs-on: ubuntu-latest
